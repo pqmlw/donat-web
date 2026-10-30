@@ -41,17 +41,34 @@ st.set_page_config(page_title="Donat Classification", layout="wide")
 
 
 # ---------------------------------------------------------------- model
+def model_source():
+    """Folder lokal ./model kalau ada, kalau tidak pakai MODEL_ID (repo Hugging Face, mis. 'user/vit-donat')."""
+    if os.path.isfile(os.path.join(MODEL_DIR, "config.json")):
+        return MODEL_DIR
+    mid = os.environ.get("MODEL_ID", "")
+    if not mid:
+        try:
+            mid = st.secrets.get("MODEL_ID", "")
+        except Exception:  # noqa: BLE001  (tidak ada secrets.toml)
+            mid = ""
+    return mid or None
+
+
 @st.cache_resource(show_spinner="Memuat model…")
-def load_resources():
-    if not os.path.isfile(os.path.join(MODEL_DIR, "config.json")):
-        return None
-    model = ViTForImageClassification.from_pretrained(MODEL_DIR).eval()
+def load_resources(src):
+    model = ViTForImageClassification.from_pretrained(src).eval()
     mean, std = [0.5] * 3, [0.5] * 3
-    pre = os.path.join(MODEL_DIR, "preprocessor_config.json")
-    if os.path.isfile(pre):
+    try:
+        if os.path.isdir(src):
+            pre = os.path.join(src, "preprocessor_config.json")
+        else:
+            from huggingface_hub import hf_hub_download
+            pre = hf_hub_download(src, "preprocessor_config.json")
         with open(pre) as f:
             p = json.load(f)
         mean, std = p.get("image_mean", mean), p.get("image_std", std)
+    except Exception:  # noqa: BLE001  (file tidak ada: pakai 0.5/0.5, sama dengan ViT ini)
+        pass
     return model, new_session("u2net"), mean, std
 
 
@@ -116,10 +133,21 @@ def ring_svg(prob, passed):
 
 # ---------------------------------------------------------------- halaman
 def page_home():
-    res = load_resources()
-    if res is None:
-        st.error(f"Model belum ditemukan di '{MODEL_DIR}'. Salin config.json, model.safetensors, "
-                 "dan preprocessor_config.json dari vit_donat_final ke folder model/.")
+    src = model_source()
+    if src is None:
+        try:
+            names = list(st.secrets.keys())
+        except Exception:  # noqa: BLE001
+            names = []
+        st.error("MODEL_ID tidak terbaca. Isi Secrets di Streamlit dengan satu baris: "
+                 'MODEL_ID = "username/vit-donat", simpan, lalu Reboot app. '
+                 f"Nama secret yang terbaca sekarang: {names or 'tidak ada'}.")
+        return
+    try:
+        res = load_resources(src)
+    except Exception as e:  # noqa: BLE001
+        st.error(f"Model '{src}' gagal dimuat. Pastikan repo Hugging Face berstatus Public "
+                 f"dan berisi config.json, model.safetensors, preprocessor_config.json.\n\nDetail: {e}")
         return
 
     st.session_state.setdefault("k", 0)
