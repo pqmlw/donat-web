@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Do or Donut</title>
+<meta name="description" content="Inspeksi kualitas donat dari foto: lolos atau tidak lolos, dengan Vision Transformer.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%23E8588A' stroke-width='8'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="side" aria-label="Menu utama">
+    <a class="brand" href="#/" data-nav="home">
+      <svg class="brand-ring" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="12" fill="none" stroke="currentColor" stroke-width="9"/></svg>
+      <span>Do or Donut</span>
+    </a>
+    <nav class="menu">
+      <a href="#/tutorial" data-nav="tutorial">Tutorial</a>
+      <a href="#/about" data-nav="about">About</a>
+    </nav>
+  </aside>
+
+  <main class="main" id="main">
+
+    <!-- ============ HOME ============ -->
+    <section class="view" id="view-home" aria-labelledby="home-title">
+      <h1 class="sr-only" id="home-title">Klasifikasi kualitas donat berdasarkan visual</h1>
+      <div class="banner" id="banner" hidden role="status"></div>
+
+      <div class="card" id="card-input">
+        <div class="tabs" role="tablist" aria-label="Sumber gambar">
+          <button role="tab" id="tab-upload" aria-selected="true" aria-controls="pane-upload">Upload</button>
+          <button role="tab" id="tab-camera" aria-selected="false" aria-controls="pane-camera" tabindex="-1">Camera</button>
+        </div>
+
+        <div class="pane" id="pane-upload" role="tabpanel" aria-labelledby="tab-upload">
+          <div class="drop" id="drop">
+            <svg class="drop-ring" viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="44" fill="none" stroke="currentColor" stroke-width="22"/></svg>
+            <button class="btn" id="btn-upload" type="button">Upload image</button>
+            <p class="hint">atau tarik foto donat ke sini</p>
+            <input id="file" type="file" accept="image/*" hidden>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-camera" role="tabpanel" aria-labelledby="tab-camera" hidden>
+          <div class="drop cam" id="cam-box">
+            <video id="video" playsinline muted></video>
+            <div class="cam-msg" id="cam-msg">
+              <button class="btn" id="btn-cam-start" type="button">Turn on camera</button>
+              <p class="hint">Browser akan meminta izin kamera.</p>
+            </div>
+          </div>
+          <div class="cam-actions" id="cam-actions" hidden>
+            <button class="btn" id="btn-snap" type="button">Take photo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- hasil -->
+      <div class="card result" id="card-result" hidden aria-live="polite">
+        <div class="shot" id="shot">
+          <img id="res-img" alt="Foto donat yang dianalisis">
+          <div class="busy" id="busy" hidden>
+            <div class="spin" aria-hidden="true"></div>
+            <p>Menganalisis foto…</p>
+          </div>
+        </div>
+
+        <div class="info" id="info" hidden>
+          <p class="kind" id="res-kind"></p>
+          <h2 class="status" id="res-status"></h2>
+
+          <div class="gauge-row">
+            <svg class="gauge" viewBox="0 0 120 120" aria-hidden="true">
+              <circle class="g-track" cx="60" cy="60" r="46" />
+              <circle class="g-bar" id="g-bar" cx="60" cy="60" r="46" />
+              <g class="g-icon" id="g-icon"></g>
+            </svg>
+            <dl class="facts">
+              <div><dt>Percentage:</dt><dd id="res-pct"></dd></div>
+              <div><dt>Confidence:</dt><dd id="res-conf"></dd></div>
+            </dl>
+          </div>
+
+          <p class="note" id="res-note" hidden></p>
+
+          <button class="btn" id="btn-again" type="button">Try another image</button>
+
+          <details class="more">
+            <summary>Peluang tiap kelas</summary>
+            <ul class="rank" id="rank"></ul>
+            <figure class="proc">
+              <img id="res-proc" alt="Gambar setelah latar dihapus dan diubah ke 224×224">
+              <figcaption>Gambar yang dilihat model</figcaption>
+            </figure>
+          </details>
+        </div>
+
+        <div class="fail" id="fail" hidden>
+          <h2>Foto belum bisa dianalisis</h2>
+          <p id="fail-msg"></p>
+          <button class="btn" id="btn-retry" type="button">Try another image</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ TUTORIAL ============ -->
+    <section class="view" id="view-tutorial" hidden aria-labelledby="tut-title">
+      <h1 class="page-title" id="tut-title">How to use?</h1>
+      <div class="tut">
+        <div class="card demo" aria-hidden="true">
+          <div class="tabs static"><span class="on">Upload</span><span>Camera</span></div>
+          <div class="drop demo-drop">
+            <svg class="drop-ring" viewBox="0 0 120 120"><circle cx="60" cy="60" r="44" fill="none" stroke="currentColor" stroke-width="22"/></svg>
+            <span class="btn">Upload image</span>
+          </div>
+          <svg class="arrow" viewBox="0 0 120 40"><path d="M116 20H10M28 6 10 20l18 14" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+
+        <div class="prose">
+          <ol class="steps">
+            <li><strong>Pilih sumber foto.</strong> Tab <em>Upload</em> untuk foto dari perangkat, tab <em>Camera</em> untuk memotret langsung.</li>
+            <li><strong>Siapkan foto.</strong> Satu donat per foto, tampak utuh dari atas, dengan cahaya merata. Latar polos membantu, tetapi latar apa pun akan dihapus otomatis.</li>
+            <li><strong>Klik Upload image</strong> atau ambil foto dengan <em>Take photo</em>. Analisis memakan waktu beberapa detik.</li>
+            <li><strong>Baca hasilnya.</strong> Kamu akan melihat jenis donat, status lolos atau tidak lolos, persentase, dan tingkat keyakinan.</li>
+          </ol>
+          <h2>Membaca tingkat keyakinan</h2>
+          <dl class="defs">
+            <dt><span class="chip high">HIGH</span></dt><dd>Model cukup yakin. Hasil bisa dipakai sebagai acuan.</dd>
+            <dt><span class="chip med">MEDIUM</span></dt><dd>Cek ulang dengan foto kedua dari posisi berbeda.</dd>
+            <dt><span class="chip low">LOW</span></dt><dd>Model ragu. Periksa donat secara manual.</dd>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ABOUT ============ -->
+    <section class="view" id="view-about" hidden aria-labelledby="about-title">
+      <h1 class="page-title" id="about-title">About</h1>
+      <div class="about">
+        <div class="prose">
+          <h2>Apa ini?</h2>
+          <p>Do or Donut adalah aplikasi yang membantu inspeksi kualitas donat secara visual lewat foto. Aplikasi membaca satu foto, lalu menentukan jenis donat dan apakah donat itu lolos atau tidak.</p>
+          <h2>Enam hasil yang dikenali</h2>
+          <ul class="classes">
+            <li><b>Donat cincin</b>lolos, penyok, atau tidak simetris</li>
+            <li><b>Donat isi</b>lolos, penyok, atau isian bocor</li>
+          </ul>
+        </div>
+        <div class="prose">
+          <h2>Cara kerjanya</h2>
+          <p>Foto diproses dalam empat tahap sebelum dibaca model.</p>
+          <ol class="pipe">
+            <li>Latar belakang dihapus dengan <em>rembg</em> dan diganti menjadi putih polos.</li>
+            <li>Foto dijadikan persegi dan diubah ke 224×224 piksel.</li>
+            <li>Nilai warna dinormalisasi sesuai model.</li>
+            <li>Vision Transformer (ViT) hasil fine-tuning memberi peluang untuk tiap kelas.</li>
+          </ol>
+          <h2>Perlu diingat</h2>
+          <p>Model dilatih dari foto dengan kondisi tertentu. Hasil paling baik untuk foto dengan pencahayaan dan sudut serupa. Hasil ini pendamping, bukan pengganti pemeriksaan langsung.</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<canvas id="snap" hidden></canvas>
+<script src="app.js"></script>
+</body>
+</html>

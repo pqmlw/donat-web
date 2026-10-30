@@ -1,0 +1,10 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+streamlit
+torch
+transformers
+safetensors
+huggingface_hub
+rembg[cpu]
+onnxruntime
+pillow
+numpy
