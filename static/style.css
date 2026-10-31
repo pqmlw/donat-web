@@ -188,8 +188,8 @@ img { max-width: 100%; display: block; }
 .proc img { width: 84px; height: 84px; border: 1px solid var(--line); border-radius: 6px; flex: none; }
 .proc figcaption { font-size: 13px; }
 
-.fail { grid-column: 1 / -1; display: grid; gap: 12px; justify-items: center; text-align: center; padding: 12px 0; }
-.fail h2 { font-size: 26px; color: var(--fail); }
+#fail { grid-column: 1 / -1; display: grid; gap: 12px; justify-items: center; text-align: center; padding: 12px 0; }
+#fail h2 { font-size: 26px; color: var(--fail); }
 
 /* ---------- halaman teks ---------- */
 .page-title { text-align: center; font-size: clamp(32px, 4vw, 44px); letter-spacing: -0.02em; margin-bottom: 40px; }
